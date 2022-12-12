@@ -1,4 +1,4 @@
-input_file,repetition,parallel1.out,parallel2.out,serial.out
+input_file,repetition,parallel1,parallel2,serial
 2,1,0.000002,0.000006,0.000000
 2,2,0.000004,0.000008,0.000000
 2,3,0.000003,0.000006,0.000000

@@ -129,59 +129,86 @@ void mandelbrot_parallel_for(unsigned char* image, unsigned width, unsigned heig
     }
 }
 
-void mandelbrot_tasks(unsigned char* image, unsigned width, unsigned height, MandelbrotConfig cfg) {
+void mandelbrot_pixel_tasks(unsigned char* image, unsigned width, unsigned height, MandelbrotConfig cfg) {
+    #pragma omp parallel
+    #pragma omp single nowait
+    {
     for (unsigned yp = 0; yp < height; yp++) {
         for (unsigned xp = 0; xp < width; xp++) {
-            // each pixel is an OpenMP task
             #pragma omp task
             mandelbrot_pixel(image, width, height, xp, yp, cfg);
         }
     }
     // wait until all pixels have completed
     #pragma omp taskwait
+    }
+}
+
+void mandelbrot_row_tasks(unsigned char* image, unsigned width, unsigned height, MandelbrotConfig cfg) {
+    #pragma omp parallel
+    #pragma omp single nowait
+    {
+    for (unsigned yp = 0; yp < height; yp++) {
+        #pragma omp task
+        {
+            for (unsigned xp = 0; xp < width; xp++) {
+                mandelbrot_pixel(image, width, height, xp, yp, cfg);
+            }
+        }
+    }
+    // wait until all pixels have completed
+    #pragma omp taskwait
+    }
 }
 
 void (*mandelbrot)(unsigned char*, unsigned, unsigned, MandelbrotConfig) = 
     #ifdef P_FOR
         mandelbrot_parallel_for
-    #elif P_TASK
-        mandelbrot_tasks
+    #elif P_PIXEL_TASK
+        mandelbrot_pixel_tasks
+    #elif P_ROW_TASK
+        mandelbrot_row_tasks
     #else
         mandelbrot_serial
     #endif
     ;
 
 
-int main(int argc, const char * argv[]) {
+int main() {
     unsigned width, height;
     MandelbrotConfig cfg;
     char image_path[BUF_SIZE];
 
-    std::cout << "width: ";
+    std::cout << "width: " << std::endl;
     std::cin >> width;
 
-    std::cout << "height: ";
+    std::cout << "height: " << std::endl;
     std::cin >> height;
 
     double real, complex, zoom;
-    std::cout << "real complex zoom: ";
+    std::cout << "real complex zoom: " << std::endl;
     std::cin >> real >> complex >> zoom;
-    cfg.xmax = real + 1/zoom;
-    cfg.xmin = real - 1/zoom;
-    cfg.ymax = complex + 1/zoom;
-    cfg.ymin = complex - 1/zoom;
 
-    std::cout << "max_iterations: ";
+    double margin_fac = std::exp2f(-zoom)/2;
+
+    cfg.xmax = real + margin_fac;
+    cfg.xmin = real - margin_fac;
+    cfg.ymax = complex + margin_fac;
+    cfg.ymin = complex - margin_fac;
+
+    std::cout << "max_iterations: " << std::endl;
     std::cin >> cfg.max_iterations;
 
-    std::cout << "image path:";
+    std::cout << "image path:" << std::endl;
     std::cin >> std::setw(BUF_SIZE) >> image_path;
 
     // We cannot use std::vector since that is thread-safe and would introduce locking
     // Size of array is (width * height) pixels with 4 (RGBA) channels
     unsigned char* image = new unsigned char[width * height * 4];
 
+    double elapsed_clock = omp_get_wtime();
     mandelbrot(image, width, height, cfg);
+    elapsed_clock = omp_get_wtime() - elapsed_clock;
 
     unsigned error = lodepng::encode(image_path, image, width, height);
 
@@ -191,6 +218,9 @@ int main(int argc, const char * argv[]) {
         std::cerr << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
         return 1;
     }
+
+    // write execution time to stdout
+    std::cout << std::setprecision(6) << elapsed_clock;
 
     return 0;
 }
