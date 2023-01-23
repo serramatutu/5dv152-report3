@@ -24,7 +24,7 @@ bin:
 
 
 # compile 5
-5_FLAGS = -stdlib=libc++ -fopenmp -Wall -Wextra -pedantic -O3
+5_FLAGS = -fopenmp -Wall -Wextra -pedantic -O3
 5_FILES = 5.cpp lodepng.cpp
 
 5: 5_serial 5_for 5_pixel_task 5_row_task
@@ -34,13 +34,13 @@ bin:
 	mkdir -p -- bin/5
 
 5_serial: 5_bin
-	clang++ ${5_FLAGS} -o bin/5/serial.out ${5_FILES}
+	g++ ${5_FLAGS} -o bin/5/serial.out ${5_FILES}
 
 5_for: 5_bin
-	clang++ -D P_FOR ${5_FLAGS} -o bin/5/for.out ${5_FILES}
+	g++ -D P_FOR ${5_FLAGS} -o bin/5/for.out ${5_FILES}
 
 5_pixel_task: 5_bin
-	clang++ -D P_PIXEL_TASK ${5_FLAGS} -o bin/5/pixeltask.out ${5_FILES}
+	g++ -D P_PIXEL_TASK ${5_FLAGS} -o bin/5/pixeltask.out ${5_FILES}
 
 5_row_task: 5_bin
-	clang++ -D P_ROW_TASK ${5_FLAGS} -o bin/5/rowtask.out ${5_FILES}
+	g++ -D P_ROW_TASK ${5_FLAGS} -o bin/5/rowtask.out ${5_FILES}

@@ -32,7 +32,26 @@ def create_5():
             f.writelines(str(line) + "\n" for line in lines)
 
 
+def create_5_jobscripts():
+    os.makedirs("jobscripts", exist_ok=True)
+
+    with open("submit-job-template.sh", "r") as f:
+        template = f.read()
+    
+    for impl_fullname in os.listdir("bin/5"):
+        impl = impl_fullname.strip(".out")
+        for infile in os.listdir("in/5/"):
+            with open(f"jobscripts/{infile}_{impl}.sh", "w") as f:
+                f.write(
+                    template.format(
+                        impl=impl,
+                        infile=infile
+                    )
+                )
+
+
 
 if __name__ == "__main__":
-    create_4()
-    create_5()
+    # create_4()
+    # create_5()
+    create_5_jobscripts()

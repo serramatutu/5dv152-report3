@@ -220,7 +220,7 @@ int main() {
     }
 
     // write execution time to stdout
-    std::cout << std::setprecision(6) << elapsed_clock;
+    std::cout << std::endl << std::setprecision(6) << elapsed_clock;
 
     return 0;
 }

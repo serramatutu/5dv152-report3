@@ -1,7 +1,5 @@
 #!/bin/bash
 
-TARGET=$1
-
 if [ "$TARGET" = "" ]; then
     echo "Must specify a target as first argument."
     echo "Usage:"
